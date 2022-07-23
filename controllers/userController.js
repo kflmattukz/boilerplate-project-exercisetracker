@@ -1,5 +1,6 @@
-exports.createUser = function (req,res) {
+const User = require('../model/User')
 
+exports.createUser = function (req,res) {
   res.json({ "username": req.body.username })
 
 }

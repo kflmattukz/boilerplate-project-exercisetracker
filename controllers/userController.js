@@ -2,6 +2,56 @@ const mongoose = require('mongoose')
 const User = require('../model/User')
 const Exercise = require('../model/Exercise')
 
+exports.getAllUser = function (req,res) {
+
+  User.find()
+    .select({
+      username: true,
+      _id:true
+    })
+    .then(doc => {
+      let users = []
+      doc.map(user => {
+        users.push({
+          username: user.username,
+          _id: user._id
+        })
+      })
+      res.status(200).json(users)
+    })
+    .catch(err => console.log(err))
+
+}
+
+exports.getAllExerciseByUserId = function(req,res) {
+  const id = req.params.id
+
+  Exercise.find({ user_id: id})
+    .select({
+      username:true,
+      user_id:true,
+      description: true,
+      duration: true,
+      date:true
+    })
+    .then(doc => {
+      let exercises = {
+        username: doc[0].username,
+        _id: doc[0].user_id,
+        exercises: []
+      }
+
+      doc.map(exercise => {
+        exercises.exercises.push({
+          description: exercise.description,
+          duraion: exercise.duration,
+          date: new Date(exercise.date).toDateString()
+        })
+      })
+      res.status(200).json(exercises)
+    })
+}
+
 exports.createUser = function (req,res) {
   
   const { username } = req.body

@@ -10,14 +10,7 @@ exports.getAllUser = function (req,res) {
       _id:true
     })
     .then(doc => {
-      let users = []
-      doc.map(user => {
-        users.push({
-          username: user.username,
-          _id: user._id
-        })
-      })
-      res.status(200).json(users)
+      res.status(200).json(doc)
     })
     .catch(err => console.log(err))
 
@@ -97,7 +90,6 @@ exports.exerciseLogs = function (req,res) {
   const id = req.params.id
   
   Exercise.find({ user_id: id})
-    .sort({date: 1})
     .select({
       username: true,
       user_id: true,
@@ -111,7 +103,7 @@ exports.exerciseLogs = function (req,res) {
         username: doc[0].username,
         count: doc.length,
         _id: doc[0].user_id,
-        logs: []  
+        log: []  
       }
       for (let i = 0 ; i < doc.length ; i++) {
         let date = new Date(doc[i].date).toDateString()

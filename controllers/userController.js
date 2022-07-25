@@ -46,11 +46,6 @@ exports.exerciseLogs = function (req,res) {
   
   const id = req.params.id
   
-  // Exercise.find({ user_id: id})
-  //   .then(doc => {
-  //     res.status(200).json(doc)
-  //   }).catch(err => console.log(err))
-
   Exercise.find({ user_id: id})
     .sort({date: 1})
     .select({
@@ -81,15 +76,3 @@ exports.exerciseLogs = function (req,res) {
     })
     .catch(err => console.log(err))
 }
-
-//logs
-// {
-//   username: "fcc_test",
-//   count: 1,
-//   _id: "5fb5853f734231456ccb3b05",
-//   log: [{
-//     description: "test",
-//     duration: 60,
-//     date: "Mon Jan 01 1990",
-//   }]
-// }

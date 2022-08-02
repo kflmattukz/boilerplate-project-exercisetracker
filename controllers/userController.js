@@ -95,7 +95,7 @@ exports.addExercisesToUser = function (req,res) {
  
 }
 
-exports.exerciseLogsByUserId = function (req,res) {
+exports.exercisesLogsByUserId = async (req,res) => {
   
   let { from,to,limit } = req.query
   const id = req.params.id
@@ -103,37 +103,25 @@ exports.exerciseLogsByUserId = function (req,res) {
   from = moment(from, 'yyyy-mm-dd').isValid() ? moment(from , 'yyyy-mm-dd') : 0
   to = moment(to, 'yyyy-mm-dd').isValid() ? moment(to , 'yyyy-mm-dd') : moment().add(1000000000000)
 
-  User.findById(id)
-    .then(user => {
+  const user = await User.findById(id)
+  // console.log(user)
+  if (!user) throw new Error('User not Found')
 
-      if (!user) return res.status(404).json({ message: "user not found!" })
-
-      Exercise.find({ user_id: id})
-        .where('date').gte(from).lte(to)
-        .limit(+limit)
-        .exec()
-        .then(exercises => {
-      
-          res.status(200).json({
-            "_id": user._id,
-            "username": user.username,
-            "count": exercises.length,
-            "log": exercises.map(exercise => {
-              return {
-                "description": exercise.description,
-                "duration": exercise.duration,
-                "date": new Date(exercise.date).toDateString()
-              }
-            })
-          })
-
-        }).catch(err => {
-          console.log(err)
-          res.status(500).json({ message: err.message })
-        })
-
-    }).catch(err => {
-      console.log(err)
-      res.status(500).json({ message: err.message })
+  const exercises = await Exercise.find({ user_id: id }).where('date').gte(from).lte(to).limit(+limit).exec()
+  // console.log(exercises)
+  const logs = {
+    _id: user._id,
+    username: user.username,
+    count: exercises.length,
+    log: exercises.map(exercise => {
+      let {description, duration, date} = exercise
+      date = new Date(date).toDateString()
+      return {
+        description,
+        duration,
+        date
+      }
     })
+  }
+  res.status(200).json(logs)
 }

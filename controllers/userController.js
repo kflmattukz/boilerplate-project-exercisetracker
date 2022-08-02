@@ -98,7 +98,7 @@ exports.addExercisesToUser = function (req,res) {
 exports.exerciseLogsByUserId = function (req,res) {
   
   let { from,to,limit } = req.query
-  const id = req.params._id || req.params.id
+  const id = req.params.id
   
   from = moment(from, 'yyyy-mm-dd').isValid() ? moment(from , 'yyyy-mm-dd') : 0
   to = moment(to, 'yyyy-mm-dd').isValid() ? moment(to , 'yyyy-mm-dd') : moment().add(1000000000000)

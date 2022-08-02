@@ -5,6 +5,8 @@ router.get('/users' , userController.getAllUser)
 router.post('/users', userController.addUser)
 router.post('/users/:id/exercises' , userController.addExercisesToUser)
 router.get('/users/:id/exercises' , userController.getAllExerciseByUserId)
+
+router.get('/users/:_id/logs' , userController.exerciseLogsByUserId)
 router.get('/users/:id/logs' , userController.exerciseLogsByUserId)
 
 module.exports = router

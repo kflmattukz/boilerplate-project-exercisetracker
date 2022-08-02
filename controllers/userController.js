@@ -100,12 +100,11 @@ exports.addExercisesToUser = function (req,res) {
 exports.exerciseLogsByUserId = function (req,res) {
   
   let { from,to,limit } = req.query
-  const id = req.params.id
+  const id = req.params._id || req.params.id
   
-  form = moment(from, 'YYYY-MM-DD').isValid() ? moment(from , 'YYYY-MM-DD') : 0
-  to = moment(to, 'YYYY-MM-DD').isValid() ? moment(to , 'YYYY-MM-DD') : moment().add(1000000000000)
-
-
+  from = moment(from, 'yyyy-mm-dd').isValid() ? moment(from , 'yyyy-mm-dd') : 0
+  to = moment(to, 'yyyy-mm-dd').isValid() ? moment(to , 'yyyy-mm-dd') : moment().add(1000000000000)
+  console.log()
   User.findById(id)
     .then(user => {
 
@@ -119,9 +118,10 @@ exports.exerciseLogsByUserId = function (req,res) {
         .then(exercises => {
       
           res.status(200).json({
-            username: exercises[0].user_id.username,
+            username: user.username,
             count: exercises.length,
-            logs: exercises.map(exercise => {
+            _id: user._id,
+            log: exercises.map(exercise => {
               return {
                 description: exercise.description,
                 duration: exercise.duration,

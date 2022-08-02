@@ -9,43 +9,46 @@ exports.getAllUser = function (req,res) {
       username: true,
       _id:true
     })
-    .then(doc => {
-      res.status(200).json(doc)
+    .exec()
+    .then(users => {
+      res.status(200).json(users.map(user => {
+        return { 
+          username: user.username,
+          _id: user._id
+        }
+      }))
     })
     .catch(err => console.log(err))
 
 }
 
 exports.getAllExerciseByUserId = function(req,res) {
-  const id = req.params.id
-
-  Exercise.find({ user_id: id})
-    .select({
-      username:true,
-      user_id:true,
-      description: true,
-      duration: true,
-      date:true
-    })
-    .then(doc => {
-      let exercises = {
-        username: doc[0].username,
-        _id: doc[0].user_id,
-        exercises: []
+  const user_id = req.params.id
+  User.find({ _id: user_id })
+    .then(user => {
+      if (!user) {
+        res.status(404).json({ error: true , message: 'User not found' })
       }
-
-      doc.map(exercise => {
-        exercises.exercises.push({
-          description: exercise.description,
-          duraion: exercise.duration,
-          date: new Date(exercise.date).toDateString()
+      Exercise.find({ user_id: user_id })
+        .then(exercises => {
+          res.status(200).json({
+            username: user[0].username,
+            count: exercises.length,
+            exercises: exercises.map(ex => {
+              return {
+                description: ex.description,
+                duration: ex.duration,
+                date: new Date(ex.date).toDateString()
+              }
+            })
+          })
         })
-      })
-      res.status(200).json(exercises)
-    })
+        .catch(err => console.log(err))
+
+    }).catch(err => console.log(err))
 }
 
-exports.createUser = function (req,res) {
+exports.addUser = function (req,res) {
   
   const { username } = req.body
   
@@ -60,23 +63,32 @@ exports.createUser = function (req,res) {
 
 }
 
-exports.createExercises = function (req,res) {
+exports.addExercisesToUser = function (req,res) {
   
   const { description , duration , date } = req.body
   const id = req.params.id
 
   User.findOne({ _id: id })
-    .then(doc => {
-      Exercise.create({ user_id: mongoose.Types.ObjectId(doc._id),username: doc.username , description : description , duration : duration, date: date })
-        .then(doc => {
-          let date = new Date(doc.date)
+    .then(user => {
+      if (!user) {
+        throw new Error('User not fuont')
+      }
+
+      Exercise.create({
+        user_id: mongoose.Types.ObjectId(user._id),
+        description,
+        duration,
+        date: date || Date.now 
+      })
+      .then(exercise => {
+          let date = new Date(exercise.date)
           date = date.toDateString()
           res.status(201).json({ 
-            username: doc.username,
-            description : doc.description,
-            duration : doc.duration,
+            username: user.username,
+            description : exercise.description,
+            duration : exercise.duration,
             date: date,
-            _id: doc.user_id
+            _id: exercise.user_id
           })
         })
         .catch(err => console.log(err))

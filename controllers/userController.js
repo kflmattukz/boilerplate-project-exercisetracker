@@ -115,14 +115,14 @@ exports.exerciseLogsByUserId = function (req,res) {
         .then(exercises => {
       
           res.status(200).json({
-            _id: user._id,
-            username: user.username,
-            count: exercises.length,
-            log: exercises.map(exercise => {
+            "_id": user._id,
+            "username": user.username,
+            "count": exercises.length,
+            "log": exercises.map(exercise => {
               return {
-                description: exercise.description,
-                duration: exercise.duration,
-                date: new Date(exercise.date).toDateString()
+                "description": exercise.description,
+                "duration": exercise.duration,
+                "date": new Date(exercise.date).toDateString()
               }
             })
           })

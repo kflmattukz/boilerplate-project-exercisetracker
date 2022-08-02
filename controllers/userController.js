@@ -25,17 +25,15 @@ exports.getAllUser = function (req,res) {
 
 exports.getAllExerciseByUserId = function(req,res) {
   const user_id = req.params.id
-  User.find({ _id: user_id })
+  User.findById(user_id)
     .then(user => {
       
-      if (!user) {
-        res.status(404).json({ error: true , message: 'User not found' })
-      }
+      if (!user) return res.status(404).json({ error: true , message: 'User not found' })
 
       Exercise.find({ user_id: user_id })
         .then(exercises => {
           res.status(200).json({
-            username: user[0].username,
+            username: user.username,
             count: exercises.length,
             exercises: exercises.map(ex => {
               return {
@@ -71,7 +69,7 @@ exports.addExercisesToUser = function (req,res) {
   const { description , duration , date } = req.body
   const id = req.params.id
 
-  User.findOne({ _id: id })
+  User.findById(id)
     .then(user => {
       if (!user) {
         throw new Error('User not fuont')
@@ -104,23 +102,22 @@ exports.exerciseLogsByUserId = function (req,res) {
   
   from = moment(from, 'yyyy-mm-dd').isValid() ? moment(from , 'yyyy-mm-dd') : 0
   to = moment(to, 'yyyy-mm-dd').isValid() ? moment(to , 'yyyy-mm-dd') : moment().add(1000000000000)
-  console.log()
+
   User.findById(id)
     .then(user => {
 
-      if (!user) return res.status(404).json({ error: true , message: "user not found!" })
+      if (!user) return res.status(404).json({ message: "user not found!" })
 
       Exercise.find({ user_id: id})
         .where('date').gte(from).lte(to)
         .limit(+limit)
-        .populate({path: 'user_id'})
         .exec()
         .then(exercises => {
       
           res.status(200).json({
+            _id: user._id,
             username: user.username,
             count: exercises.length,
-            _id: user._id,
             log: exercises.map(exercise => {
               return {
                 description: exercise.description,
@@ -129,13 +126,13 @@ exports.exerciseLogsByUserId = function (req,res) {
               }
             })
           })
+
         }).catch(err => {
           console.log(err)
           res.status(500).json({ message: err.message })
         })
 
-    })
-    .catch(err => {
+    }).catch(err => {
       console.log(err)
       res.status(500).json({ message: err.message })
     })

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const moment = require('moment')
 const User = require('../model/User')
 const Exercise = require('../model/Exercise')
 
@@ -26,9 +27,11 @@ exports.getAllExerciseByUserId = function(req,res) {
   const user_id = req.params.id
   User.find({ _id: user_id })
     .then(user => {
+      
       if (!user) {
         res.status(404).json({ error: true , message: 'User not found' })
       }
+
       Exercise.find({ user_id: user_id })
         .then(exercises => {
           res.status(200).json({
@@ -81,52 +84,59 @@ exports.addExercisesToUser = function (req,res) {
         date: date || Date.now 
       })
       .then(exercise => {
-          let date = new Date(exercise.date)
-          date = date.toDateString()
           res.status(201).json({ 
             username: user.username,
-            description : exercise.description,
-            duration : exercise.duration,
-            date: date,
+            description: exercise.description,
+            duration: exercise.duration,
+            date: new Date(exercise.date).toDateString(),
             _id: exercise.user_id
           })
         })
         .catch(err => console.log(err))
-
     })
  
 }
 
-exports.exerciseLogs = function (req,res) {
+exports.exerciseLogsByUserId = function (req,res) {
   
+  let { from,to,limit } = req.query
   const id = req.params.id
   
-  Exercise.find({ user_id: id})
-    .select({
-      username: true,
-      user_id: true,
-      description: true,
-      duration: true,
-      date:true
-    })
-    .exec()
-    .then(doc => {
-      let jsonData = {
-        username: doc[0].username,
-        count: doc.length,
-        _id: doc[0].user_id,
-        log: []  
-      }
-      for (let i = 0 ; i < doc.length ; i++) {
-        let date = new Date(doc[i].date).toDateString()
-        jsonData.logs.push({
-          description: doc[i].description,
-          duration: doc[i].duration,
-          date: date
-        })
-      }
+  form = moment(from, 'YYYY-MM-DD').isValid() ? moment(from , 'YYYY-MM-DD') : 0
+  to = moment(to, 'YYYY-MM-DD').isValid() ? moment(to , 'YYYY-MM-DD') : moment().add(1000000000000)
 
-      res.json(jsonData)
+
+  User.findById(id)
+    .then(user => {
+
+      if (!user) return res.status(404).json({ error: true , message: "user not found!" })
+
+      Exercise.find({ user_id: id})
+        .where('date').gte(from).lte(to)
+        .limit(+limit)
+        .populate({path: 'user_id'})
+        .exec()
+        .then(exercises => {
+      
+          res.status(200).json({
+            username: exercises[0].user_id.username,
+            count: exercises.length,
+            logs: exercises.map(exercise => {
+              return {
+                description: exercise.description,
+                duration: exercise.duration,
+                date: new Date(exercise.date).toDateString()
+              }
+            })
+          })
+        }).catch(err => {
+          console.log(err)
+          res.status(500).json({ message: err.message })
+        })
+
     })
-    .catch(err => console.log(err))
+    .catch(err => {
+      console.log(err)
+      res.status(500).json({ message: err.message })
+    })
 }

@@ -99,7 +99,9 @@ exports.addExercisesToUser = async (req,res) => {
 
 exports.exercisesLogsByUserId = async (req,res) => {
   
-  let { from,to,limit } = req.query
+  let from = req.query
+  let to = req.query
+  let limit = Number(req.query.limit)
 
   const id = req.params.id
   

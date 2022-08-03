@@ -100,12 +100,9 @@ exports.addExercisesToUser = async (req,res) => {
 exports.exercisesLogsByUserId = async (req,res) => {
   
   const id = req.params.id
-  // const from = moment(req.query.from, 'YYYY-MM-DD').isValid() ? moment(req.query.from , 'YYYY-MM-DD') : 0
-  // const to = moment(req.query.to, 'YYYY-MM-DD').isValid() ? moment(req.query.to , 'YYYY-MM-DD') : moment().add(1000000000000)
-  const from = new Date(req.query.from) || 0
-  const to = new Date(req.query.to) || new Date(Date.now())
+  const from = moment(req.query.from, 'YYYY-MM-DD').isValid() ? moment(req.query.from , 'YYYY-MM-DD') : 0
+  const to = moment(req.query.to, 'YYYY-MM-DD').isValid() ? moment(req.query.to , 'YYYY-MM-DD') : moment().add(1000000000000)
   const limit = Number(req.query.limit) || 0
-  console.log({from, to ,limit})
   const user = await User.findById(id)
   
   if (!user) throw new Error('User not Found')

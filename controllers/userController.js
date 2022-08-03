@@ -3,96 +3,122 @@ const moment = require('moment')
 const User = require('../model/User')
 const Exercise = require('../model/Exercise')
 
-exports.getAllUser = function (req,res) {
-
-  User.find()
-    .select({
-      username: true,
-      _id:true
+exports.getAllUser = async (req,res) => {
+  try {
+    let users = await User.find().select({ username: true, _id:true}).exec()
+  
+    users = users.map(user => {
+      const {username,_id} = user
+      return {
+        username,
+        _id
+      }
     })
-    .exec()
-    .then(users => {
-      res.status(200).json(users.map(user => {
-        return { 
-          username: user.username,
-          _id: user._id
-        }
-      }))
-    })
-    .catch(err => console.log(err))
 
+    res.status(200).json(users)
+  } catch(e) {
+    console.log(e.message)
+    return res.status(500).json({ message: 'something went wrong'})
+  }
 }
 
-exports.getAllExerciseByUserId = function(req,res) {
+exports.getAllExerciseByUserId = async (req,res) => {
   const user_id = req.params.id
-  User.findById(user_id)
-    .then(user => {
+
+  try{
+    const user = await User.findById(user_id)
+    if (!user) throw new Error('User not found')
+
+    const exercises = await Exercise.find({ user_id })
+
+    const userExercises = {
+      username: user.username,
+      count: exercises.length,
+      exercises: exercises.map(ex => {
+        let {description, duration, date} = ex
+        date = new Date(date).toDateString()
+        return {
+          description,
+          duration,
+          date
+        }
+      })
+    }
+
+    res.status(200).json(userExercises)
+  } catch (e) {
+    console.log(e.message)
+    res.status(500).json({message: 'something went wrong'})
+  }
+  
+  // User.findById(user_id)
+  //   .then(user => {
       
-      if (!user) return res.status(404).json({ error: true , message: 'User not found' })
+  //     if (!user) return res.status(404).json({ error: true , message: 'User not found' })
 
-      Exercise.find({ user_id: user_id })
-        .then(exercises => {
-          res.status(200).json({
-            username: user.username,
-            count: exercises.length,
-            exercises: exercises.map(ex => {
-              return {
-                description: ex.description,
-                duration: ex.duration,
-                date: new Date(ex.date).toDateString()
-              }
-            })
-          })
-        })
-        .catch(err => console.log(err))
+  //     Exercise.find({ user_id: user_id })
+  //       .then(exercises => {
+  //         res.status(200).json({
+  //           username: user.username,
+  //           count: exercises.length,
+  //           exercises: exercises.map(ex => {
+  //             return {
+  //               description: ex.description,
+  //               duration: ex.duration,
+  //               date: new Date(ex.date).toDateString()
+  //             }
+  //           })
+  //         })
+  //       })
+  //       .catch(err => console.log(err))
 
-    }).catch(err => console.log(err))
+  //   }).catch(err => console.log(err))
 }
 
-exports.addUser = function (req,res) {
-  
+exports.addUser = async (req,res) => {
   const { username } = req.body
-  
-  User.create({ username })
-    .then(({_id , username}) => { 
-      res.status(201).json({ 
-        username, 
-        _id 
-      }) 
+  try{
+    const newUser = await User.create({ username })
+    if (!newUser) throw new Error('add user Failed, try again later')
+    res.status(201).json({
+      username: newUser.username,
+      _id: newUser._id
     })
-    .catch(err => console.log(err))
-
+  } catch (e) {
+    console.log(e.message)
+    res.status(200).json({ message: 'add user failed, something went wrong, please try again later'})
+  }
 }
 
-exports.addExercisesToUser = function (req,res) {
+exports.addExercisesToUser = async (req,res) => {
   
   const { description , duration , date } = req.body
   const id = req.params.id
 
-  User.findById(id)
-    .then(user => {
-      if (!user) {
-        throw new Error('User not fuont')
-      }
-
-      Exercise.create({
-        user_id: mongoose.Types.ObjectId(user._id),
-        description,
-        duration,
-        date: date || Date.now 
-      })
-      .then(exercise => {
-          res.status(201).json({ 
-            username: user.username,
-            description: exercise.description,
-            duration: exercise.duration,
-            date: new Date(exercise.date).toDateString(),
-            _id: exercise.user_id
-          })
-        })
-        .catch(err => console.log(err))
+  try {
+    const user = await User.findById(id)
+    if (!user) throw new Error('User not found')
+    const newExercise = await Exercise.create({
+      user_id: mongoose.Types.ObjectId(user._id),
+      description,
+      duration,
+      date: date || Date.now()
     })
- 
+
+    const { username , _id} = user
+    const { description, duration, date } = newExercise
+
+    res.status(201).json({ 
+      username,
+      description,
+      duration,
+      date: new Date(date).toDateString(),
+      _id
+    })
+  } catch(e) {
+    console.log(e.message)
+    res.status(500).json({ message: 'add exercise failed, please try again later' })
+  }
 }
 
 exports.exercisesLogsByUserId = async (req,res) => {

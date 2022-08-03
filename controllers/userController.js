@@ -106,13 +106,12 @@ exports.addExercisesToUser = async (req,res) => {
     })
 
     const { username , _id} = user
-    const { description, duration, date } = newExercise
-
+    
     res.status(201).json({ 
       username,
-      description,
-      duration,
-      date: new Date(date).toDateString(),
+      description: newExercise.description,
+      duration: newExercise.duration,
+      date: new Date(newExercise.date).toDateString(),
       _id
     })
   } catch(e) {

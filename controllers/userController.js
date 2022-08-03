@@ -50,29 +50,6 @@ exports.getAllExerciseByUserId = async (req,res) => {
     console.log(e.message)
     res.status(500).json({message: 'something went wrong'})
   }
-  
-  // User.findById(user_id)
-  //   .then(user => {
-      
-  //     if (!user) return res.status(404).json({ error: true , message: 'User not found' })
-
-  //     Exercise.find({ user_id: user_id })
-  //       .then(exercises => {
-  //         res.status(200).json({
-  //           username: user.username,
-  //           count: exercises.length,
-  //           exercises: exercises.map(ex => {
-  //             return {
-  //               description: ex.description,
-  //               duration: ex.duration,
-  //               date: new Date(ex.date).toDateString()
-  //             }
-  //           })
-  //         })
-  //       })
-  //       .catch(err => console.log(err))
-
-  //   }).catch(err => console.log(err))
 }
 
 exports.addUser = async (req,res) => {
@@ -123,16 +100,17 @@ exports.addExercisesToUser = async (req,res) => {
 exports.exercisesLogsByUserId = async (req,res) => {
   
   let { from,to,limit } = req.query
+
   const id = req.params.id
   
-  from = moment(from, 'yyyy-mm-dd').isValid() ? moment(from , 'yyyy-mm-dd') : 0
-  to = moment(to, 'yyyy-mm-dd').isValid() ? moment(to , 'yyyy-mm-dd') : moment().add(1000000000000)
+  from = moment(from, 'YYYY-MM-DD').isValid() ? moment(from , 'YYYY-MM-DD') : 0
+  to = moment(to, 'YYYY-MM-DD').isValid() ? moment(to , 'YYYY-MM-DD') : moment().add(1000000000000)
 
   const user = await User.findById(id)
   // console.log(user)
   if (!user) throw new Error('User not Found')
 
-  const exercises = await Exercise.find({ user_id: id }).where('date').gte(from).lte(to).limit(+limit).exec()
+  const exercises = await Exercise.find({ user_id: id }).where('date').gte(from).lte(to).limit(limit).exec()
   // console.log(exercises)
   const logs = {
     _id: user._id,

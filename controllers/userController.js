@@ -99,21 +99,20 @@ exports.addExercisesToUser = async (req,res) => {
 
 exports.exercisesLogsByUserId = async (req,res) => {
   
-  let from = req.query
-  let to = req.query
-  let limit = Number(req.query.limit)
-
+  let from = req.query.from || 0
+  let to = req.query.to || new Date(Date.now())
+  let limit = Number(req.query.limit) || 0
   const id = req.params.id
-  
+
   from = moment(from, 'YYYY-MM-DD').isValid() ? moment(from , 'YYYY-MM-DD') : 0
   to = moment(to, 'YYYY-MM-DD').isValid() ? moment(to , 'YYYY-MM-DD') : moment().add(1000000000000)
 
   const user = await User.findById(id)
-  // console.log(user)
+  
   if (!user) throw new Error('User not Found')
 
   const exercises = await Exercise.find({ user_id: id }).where('date').gte(from).lte(to).limit(limit).exec()
-  // console.log(exercises)
+  
   const logs = {
     _id: user._id,
     username: user.username,

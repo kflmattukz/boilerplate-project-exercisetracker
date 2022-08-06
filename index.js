@@ -17,7 +17,7 @@ app.get('/', (req, res) => {
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(client => {
-    module.exports = client
+    // module.exports = client
     const listener = app.listen(process.env.PORT || 3000, () => {
       console.log('Your app is listening on port ' + listener.address().port)
     })
